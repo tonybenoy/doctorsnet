@@ -6,8 +6,6 @@ from blog import login
 from flask import render_template, flash, redirect,url_for
 from flask_login import login_user,current_user
 
-conn = sqlite3.connect('example.db')
-c = conn.cursor()
 
 def set_password(password):
     return generate_password_hash(password)
@@ -42,12 +40,25 @@ def login():
     if form.validate_on_submit():
         conn =sqlite3.connect('app.db')
         c = conn.cursor()
-        c.execute("SELECT PASSWORD_HASH FROM USERS WHERE USERNAME='%s'"%form.username.data)
-        print (c.fetchone())
-        flash('Login requested for user {},remember_me={}'.format(
-            form.username.data, form.remember_me.data))
-        return redirect(url_for('index'))
+        c.execute("SELECT hashedpass FROM user WHERE USERNAME='%s'"%form.username.data)
+        passed = c.fetchone()
+        if passed == None:
+            flash('Invalid username')
+            return redirect(url_for('login'))
+        else:
+            if check_password_hash(passed[0], form.password.data) == False:
+                flash('Invalid Password')
+                return redirect(url_for('login'))
+            else:
+                login_user(user,remember=form.remember.data)
+                return redirect(url_for('index'))
     return render_template('login.html',title='Sign In', form=form)
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
 
 @app.route('/register',methods=['GET','POST'])
 def register():
@@ -57,5 +68,13 @@ def register():
     if form.validate_on_submit():
         username = form.username.data
         email = form.email.data
-        hashedpass = generate_password_hash(form.password.data)
-        conn = sqlite3.connect
+        hashedpass = generate_password_hash(
+            form.password.data, method='pbkdf2:sha256', salt_length=12)
+        conn = sqlite3.connect('app.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO user (username,email,hashedpass) VALUES (?,?,?)",(username,email,hashedpass))
+        conn.commit()
+        conn.close() 
+        flash('Congratulations, you are now a registered user!')
+        return redirect(url_for('login'))
+    return render_template('register.html', title='Register', form=form)
