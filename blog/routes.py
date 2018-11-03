@@ -118,11 +118,17 @@ def register():
             form.password.data, method='pbkdf2:sha256', salt_length=12)
         conn = sqlite3.connect('app.db')
         c = conn.cursor()
-        c.execute("INSERT INTO user (username,email,hashedpass) VALUES (?,?,?)",(username,email,hashedpass))
-        conn.commit()
-        conn.close() 
-        flash('Congratulations, you are now a registered user!')
-        return redirect(url_for('login'))
+        c.execute("SELECT * FROM user where username = ? OR email = ?",(username,email))
+        usersreg = c.fetchmany()
+        if usersreg == []:
+            c.execute("INSERT INTO user (username,email,hashedpass) VALUES (?,?,?)",(username,email,hashedpass))
+            conn.commit()
+            conn.close() 
+            flash('Congratulations, you are now a registered user!')
+            return redirect(url_for('login'))
+        else:
+            flash('Email address or username already exist!')
+        return redirect(url_for('register'))
     return render_template('register.html', title='Register', form=form)
 
 
