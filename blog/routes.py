@@ -3,7 +3,7 @@ from blog import app
 import sqlite3
 from werkzeug.security import generate_password_hash,check_password_hash
 from werkzeug.urls import url_parse
-from blog.forms import LoginForm,RegisterationForm,EditProfileForm
+from blog.forms import LoginForm,RegisterationForm,EditProfileForm, PostForm
 from blog import login
 from flask import render_template, flash, redirect,url_for,request
 from flask_login import login_user,current_user,UserMixin,logout_user,login_required
@@ -29,7 +29,6 @@ def load_user(id):
 @app.route('/user/<username>')
 @login_required
 def user(username):
-    pdb.set_trace()
     conn = sqlite3.connect('app.db')
     c = conn.cursor()
     c.execute("SELECT * FROM user WHERE username='%s'" %
@@ -55,21 +54,38 @@ def before_request():
         conn.commit()
         conn.close()
 
-@app.route('/')
-@app.route('/index')
+
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-    posts = [
-            {
-                'author' : {'username':'john'},
-                'body' : 'Tony is the best'
+    form = PostForm()
+    if form.validate_on_submit():
+        body=form.post.data
+        conn = sqlite3.connect('app.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO post (body,timestamp,user_id) VALUES (?,?,?)",
+                  (body, datetime.utcnow(), current_user.id))
+        conn.commit()
+        conn.close()
+        flash('Your post is now live!')
+        return redirect(url_for('index'))
+    conn = sqlite3.connect('app.db')
+    c = conn.cursor()
+    c.execute("SELECT * from post ORDER BY timestamp DESC  LIMIT 25 ")
+    post = c.fetchall()
+    posts=[]
+    for item in post:
+        c.execute("SELECT username FROM user WHERE id='%s'"%item[3])
+        username = c.fetchone()[0]
+        a={
+            'author' :{
+                'username':username
             },
-            {
-                'author' : {'username':'tony'},
-                'body' : 'Tony is da bomb'
-            }
-            ] 
-    return render_template('index.html',title="Home",posts=posts)
+            'body':item[1]
+        }
+        posts.append(a) 
+    return render_template('index.html', title="Home", form=form, posts=posts)
 
 @app.route('/login', methods=['GET','POST'])
 def login():
