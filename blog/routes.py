@@ -3,7 +3,7 @@ from blog import app
 import sqlite3
 from werkzeug.security import generate_password_hash,check_password_hash
 from werkzeug.urls import url_parse
-from blog.forms import LoginForm,RegisterationForm,EditProfileForm, PostForm
+from blog.forms import LoginForm,RegisterationForm,EditProfileForm, PostForm, CommentForm
 from blog import login
 from flask import render_template, flash, redirect,url_for,request
 from flask_login import login_user,current_user,UserMixin,logout_user,login_required
@@ -34,14 +34,24 @@ def user(username):
     c.execute("SELECT * FROM user WHERE username='%s'" %
               username)
     get = c.fetchone()
-    conn.close()
     user= User()
     user.username = get[1]
     user.id = get[2]
-    posts = [
-        {'author': user, 'body': 'Test post #1'},
-        {'author': user, 'body': 'Test post #2'}
-    ]
+    c.execute("SELECT * FROM post WHERE user_id='%s'"%user.id )
+    post = c.fetchall()
+    posts = []
+    for item in post:
+        c.execute("SELECT username FROM user WHERE id='%s'" % item[3])
+        username = c.fetchone()[0]
+        a = {
+            'author': {
+                'username': username
+            },
+            'body': item[1],
+            'time': item[2]
+        }
+        posts.append(a)
+    conn.close()
     return render_template('user.html', user=user, posts=posts)
 
 
@@ -50,7 +60,8 @@ def before_request():
     if current_user.is_authenticated:
         conn = sqlite3.connect('app.db')
         c = conn.cursor()
-        c.execute("UPDATE user SET last_seen = ? WHERE id= ?", (datetime.utcnow(),current_user.id))
+        c.execute("UPDATE user SET last_seen = ? WHERE id= ?",
+                  (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), current_user.id))
         conn.commit()
         conn.close()
 
@@ -64,8 +75,9 @@ def index():
         body=form.post.data
         conn = sqlite3.connect('app.db')
         c = conn.cursor()
-        c.execute("INSERT INTO post (body,timestamp,user_id) VALUES (?,?,?)",
-                  (body, datetime.utcnow(), current_user.id))
+        print (current_user.username)
+        c.execute("INSERT INTO post (body,timestamp,user_id,username) VALUES (?,?,?,?)",
+                  (body, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), current_user.id,current_user.username))
         conn.commit()
         conn.close()
         flash('Your post is now live!')
@@ -76,13 +88,12 @@ def index():
     post = c.fetchall()
     posts=[]
     for item in post:
-        c.execute("SELECT username FROM user WHERE id='%s'"%item[3])
-        username = c.fetchone()[0]
         a={
             'author' :{
-                'username':username
+                'username': item[1]
             },
-            'body':item[1]
+            'body' : item[2],
+            'time' : item[3]
         }
         posts.append(a) 
     return render_template('index.html', title="Home", form=form, posts=posts)
@@ -148,6 +159,47 @@ def register():
     return render_template('register.html', title='Register', form=form)
 
 
+@app.route('/post/<id>', methods=['GET', 'POST'])
+@login_required
+def post_page(id):
+    form = CommentForm()
+    if form.validate_on_submit():
+        comment = form.comment.data
+        conn = sqlite3.connect('app.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO comment (post_id,body,timestamp,user_id,username) VALUES (?,?,?,?,?)",
+                  (id,comment, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), current_user.id, current_user.username))
+        conn.commit()
+        conn.close()
+        flash('Your comment is now posted!')
+        return redirect(url_for('post_page',id=id))
+    conn = sqlite3.connect('app.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM post WHERE id = ?",(id, ))
+    post = c.fetchone()
+    c.execute("SELECT * FROM comment WHERE post_id = ?",(id, ))
+    comments = c.fetchall()
+    comm=[]
+    for item in comments:
+        print(item)
+        comm.append(
+            {
+                "comment": item[3],
+                "username": item[2],
+                "time":item[4]
+            }
+        )
+    posts  = {
+        "username" : post[1],
+        "post" : post[2],
+        "timestamp" : post[3],
+        "comments" : comm
+    }
+    print (posts)
+    return render_template('post.html', title='Post', form=form, posts=posts)
+
+
+
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
@@ -163,11 +215,9 @@ def edit_profile():
     elif request.method == 'GET':
         conn = sqlite3.connect('app.db')
         c = conn.cursor()
-        c.execute("SELECT USERNAME,about from user WHERE id= ?",
-                  ( current_user.id))
+        c.execute("SELECT USERNAME,about from user WHERE id= ?",( current_user.id))
         data=c.fetchone()
         conn.close()
         form.username.data = data[0]
         form.about_me.data = data[1]
-    return render_template('edit_profile.html', title='Edit Profile',
-                           form=form)
+    return render_template('edit_profile.html', title='Edit Profile',form=form)

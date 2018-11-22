@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Post by, {{ posts.username }}!</h1>
+<p>
+    {{posts.post}} at : {{posts.timestamp}}
+</p>
+{% for comment in posts.comments %}
+<p>
+{{ comment.username }} says: <b>{{ comment.comment }} at :{{ comment.time }}</b>
+
+</p>
+{% endfor %}
+
+<form action="" method="post">
+	{{ form.hidden_tag() }}
+	<p>
+		{{ form.comment.label }}<br>
+		{{ form.comment(cols=32, rows=1) }}<br>
+		{% for error in form.comment.errors %}
+		<span style="color: red;">[{{ error }}]</span>
+		{% endfor %}
+	</p>
+	<p>{{ form.submit() }}</p>
+</form>
+
+{% endblock %}

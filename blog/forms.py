@@ -17,16 +17,19 @@ class RegisterationForm(FlaskForm):
     submit = SubmitField("Register")
     
     def validate_username(self, username):
-    
         return ValidationError("Username Not Available")
 
     def validate_email(self,email):
-
         return ValidationError("Email ID already in use")
-
 
 class PostForm(FlaskForm):
     post = TextAreaField('Say something', validators=[
+        DataRequired(), Length(min=1, max=500)])
+    submit = SubmitField('Submit')
+
+
+class CommentForm(FlaskForm):
+    comment = TextAreaField('Write a comment!', validators=[
         DataRequired(), Length(min=1, max=140)])
     submit = SubmitField('Submit')
 
