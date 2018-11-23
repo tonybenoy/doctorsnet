@@ -45,7 +45,6 @@ def index():
         body=form.post.data
         conn = sqlite3.connect('app.db')
         c = conn.cursor()
-        print (current_user.username)
         c.execute("INSERT INTO post (body,timestamp,user_id,username) VALUES (?,?,?,?)",
                   (body, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), current_user.id,current_user.username))
         conn.commit()
@@ -56,7 +55,6 @@ def index():
     c = conn.cursor()
     c.execute("SELECT * from post ORDER BY timestamp DESC  LIMIT 25 ")
     post = c.fetchall()
-    print (post)
     posts=[]
     for item in post:
         a={
@@ -86,7 +84,6 @@ def user(username):
     user.about = get[3]
     c.execute("SELECT * FROM post WHERE user_id='%s'" % user.id)
     post = c.fetchall()
-    print (post)
     posts = []
     for item in post:
         a = {
@@ -182,7 +179,6 @@ def post_page(id):
     post = c.fetchone()
     c.execute("SELECT * FROM comment WHERE post_id = ?",(id, ))
     comments = c.fetchall()
-    print (post)
     comm=[]
     for item in comments:
         comm.append(
@@ -200,10 +196,7 @@ def post_page(id):
         "timestamp" : post[3],
         "comments" : comm
     }
-    print (posts)
     return render_template('post.html', title='Post', form=form, posts=posts)
-
-
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required

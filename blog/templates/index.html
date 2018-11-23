@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Hi, {{ current_user.username }}!</h1>
+<h1>Hi, Dr. {{ current_user.username }}!</h1>
 <form action="" method="post">
 	{{ form.hidden_tag() }}
 	<p>
@@ -14,7 +14,7 @@
 </form>
 {% for post in posts %}
 <p>
-	<a href="{{ url_for('user',username=post.author.username) }}"> {{ post.author.username }}</a>
+	<a href="{{ url_for('user',username=post.author.username) }}">Dr. {{ post.author.username }}</a>
 	says: <b>
 		<a href="{{ url_for('post_page',id=post.id) }}">{{ post.body }}</a>
 		at :{{ post.time }}</b>

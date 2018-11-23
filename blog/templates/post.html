@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Post by, <a href="{{ url_for('user',username=posts.username) }}"> {{ posts.username }}</a>!</h1>
+<h1>Post by, <a href="{{ url_for('user',username=posts.username) }}">Dr.{{ posts.username }}</a>!</h1>
 <p>
 
     {{posts.post}} at : {{posts.timestamp}}
 </p>
 {% for comment in posts.comments %}
 <p>
-<a href="{{ url_for('user',username=comment.username) }}"> {{ comment.username }}</a> says: <b>{{ comment.comment }} at :{{ comment.time }}</b>
+<a href="{{ url_for('user',username=comment.username) }}">Dr.{{ comment.username }}</a> says: <b>{{ comment.comment }} at :{{ comment.time }}</b>
 
 </p>
 {% endfor %}
