@@ -26,34 +26,6 @@ def load_user(id):
     user.username = get[0]
     return user
 
-@app.route('/user/<username>')
-@login_required
-def user(username):
-    conn = sqlite3.connect('app.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM user WHERE username='%s'" %
-              username)
-    get = c.fetchone()
-    user= User()
-    user.username = get[1]
-    user.id = get[2]
-    c.execute("SELECT * FROM post WHERE user_id='%s'"%user.id )
-    post = c.fetchall()
-    posts = []
-    for item in post:
-        c.execute("SELECT username FROM user WHERE id='%s'" % item[3])
-        username = c.fetchone()[0]
-        a = {
-            'author': {
-                'username': username
-            },
-            'body': item[1],
-            'time': item[2]
-        }
-        posts.append(a)
-    conn.close()
-    return render_template('user.html', user=user, posts=posts)
-
 
 @app.before_request
 def before_request():
@@ -98,6 +70,33 @@ def index():
         posts.append(a) 
     return render_template('index.html', title="Home", form=form, posts=posts)
 
+
+@app.route('/user/<username>')
+@login_required
+def user(username):
+    conn = sqlite3.connect('app.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM user WHERE username='%s'" %
+              username)
+    get = c.fetchone()
+    user = User()
+    user.username = get[1]
+    user.id = get[2]
+    c.execute("SELECT * FROM post WHERE user_id='%s'" % user.id)
+    post = c.fetchall()
+    posts = []
+    for item in post:
+        a = {
+            'author': {
+                'username': username
+            },
+            'body': item[2],
+            'time': item[3]
+        }
+        posts.append(a)
+    conn.close()
+    return render_template('user.html', user=user, posts=posts)
+    
 @app.route('/login', methods=['GET','POST'])
 def login():
     if current_user.is_authenticated:
