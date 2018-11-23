@@ -14,7 +14,10 @@
 </form>
 {% for post in posts %}
 <p>
-	{{ post.author.username }} says: <b>{{ post.body }} at :{{ post.time }}</b>
+	<a href="{{ url_for('user',username=post.author.username) }}"> {{ post.author.username }}</a>
+	says: <b>
+		<a href="{{ url_for('post_page',id=post.id) }}">{{ post.body }}</a>
+		at :{{ post.time }}</b>
 </p>
 {% endfor %}
 {% endblock %}

@@ -12,7 +12,6 @@ import pdb
 class User(UserMixin):
     pass
 
-
 @login.user_loader
 def load_user(id):
     user = User()
@@ -37,7 +36,6 @@ def before_request():
         conn.commit()
         conn.close()
 
-
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 @login_required
@@ -58,14 +56,17 @@ def index():
     c = conn.cursor()
     c.execute("SELECT * from post ORDER BY timestamp DESC  LIMIT 25 ")
     post = c.fetchall()
+    print (post)
     posts=[]
     for item in post:
         a={
             'author' :{
-                'username': item[1]
+                'username': item[1],
+                'id' : item[4]
             },
             'body' : item[2],
-            'time' : item[3]
+            'time' : item[3],
+            'id' : item[0]
         }
         posts.append(a) 
     return render_template('index.html', title="Home", form=form, posts=posts)
@@ -82,21 +83,24 @@ def user(username):
     user = User()
     user.username = get[1]
     user.id = get[2]
+    user.about = get[3]
     c.execute("SELECT * FROM post WHERE user_id='%s'" % user.id)
     post = c.fetchall()
+    print (post)
     posts = []
     for item in post:
         a = {
             'author': {
-                'username': username
+                'username': username,
             },
             'body': item[2],
+            'id':item[0],
             'time': item[3]
         }
         posts.append(a)
     conn.close()
     return render_template('user.html', user=user, posts=posts)
-    
+
 @app.route('/login', methods=['GET','POST'])
 def login():
     if current_user.is_authenticated:
@@ -178,18 +182,20 @@ def post_page(id):
     post = c.fetchone()
     c.execute("SELECT * FROM comment WHERE post_id = ?",(id, ))
     comments = c.fetchall()
+    print (post)
     comm=[]
     for item in comments:
-        print(item)
         comm.append(
             {
                 "comment": item[3],
                 "username": item[2],
-                "time":item[4]
+                "time":item[4],
+                'id' : item[1]
             }
         )
     posts  = {
         "username" : post[1],
+        'id':post[4],
         "post" : post[2],
         "timestamp" : post[3],
         "comments" : comm

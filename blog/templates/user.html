@@ -5,10 +5,12 @@
 <p><a href="{{ url_for('edit_profile') }}">Edit your profile</a></p>
 {% endif %}
 <h1>User: {{ user.username }}</h1>
+<p>About : {{ user.about }}</p>
 <hr>
 {% for post in posts %}
 <p>
-    {{ post.author.username }} says: <b>{{ post.body }} at {{post.time}}</b>
+{{ post.author.username }} says: <b> <a href="{{ url_for('post_page',id=post.id) }}">{{ post.body }}</a> at
+    {{post.time}}</b>
 </p>
 {% endfor %}
 
