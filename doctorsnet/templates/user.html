@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
 {% if user == current_user %}
 <p><a href="{{ url_for('edit_profile') }}">Edit your profile</a></p>
@@ -9,9 +8,8 @@
 <hr>
 {% for post in posts %}
 <p>
-Dr.{{ post.author.username }} says: <b> <a href="{{ url_for('post_page',id=post.id) }}">{{ post.body }}</a> at
-    {{post.time}}</b>
+    Dr.{{ post.author.username }} says: <b> <a href="{{ url_for('post_page',id=post.id) }}">{{ post.body }}</a> at
+        {{post.time}}</b>
 </p>
 {% endfor %}
-
 {% endblock %}

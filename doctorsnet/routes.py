@@ -1,13 +1,12 @@
 from datetime import datetime
-from blog import app
+from doctorsnet import app
 import sqlite3
 from werkzeug.security import generate_password_hash,check_password_hash
 from werkzeug.urls import url_parse
-from blog.forms import LoginForm,RegisterationForm,EditProfileForm, PostForm, CommentForm
-from blog import login
+from doctorsnet.forms import LoginForm, RegisterationForm, EditProfileForm, PostForm, CommentForm
+from doctorsnet import login
 from flask import render_template, flash, redirect,url_for,request
 from flask_login import login_user,current_user,UserMixin,logout_user,login_required
-import pdb
 
 class User(UserMixin):
     pass
@@ -18,8 +17,7 @@ def load_user(id):
     user.id = id
     conn = sqlite3.connect('app.db')
     c = conn.cursor()
-    c.execute("SELECT username FROM user WHERE id='%s'" %
-              id)
+    c.execute("SELECT username FROM user WHERE id='%s'" %id)
     get = c.fetchone()
     conn.close()
     user.username = get[0]
@@ -68,7 +66,6 @@ def index():
         }
         posts.append(a) 
     return render_template('index.html', title="Home", form=form, posts=posts)
-
 
 @app.route('/user/<username>')
 @login_required
